@@ -1,0 +1,91 @@
+<?php
+session_start();
+header('Content-Type: text/html; charset= utf-8');
+$servername = "localhost";
+$database = "testing system";
+$username = "root";
+$password = "";
+$conn = mysqli_connect($servername, $username, $password, $database);
+if (!$conn) {
+	die("Connection failed: " . mysqli_connect_error());
+    echo "ERROR";
+}
+if (!isset($_COOKIE['identification'])) {
+    header('Location: http://localhost/authorization.php');
+    exit();
+}
+$id_user = $_COOKIE['identification'];
+?>
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+</head>
+<body>
+    <div style="width: 900px; margin:auto; margin-top:50px; ">
+        <a href="../../index.php" type="button" class="btn btn-primary">На главную</a>
+    </div>
+    <div style="width: 900px; padding:50px; margin:auto;">
+    <h2>Условие</h2>
+    <?php
+
+    echo "<table border='0'>
+    <tr>
+    <th style='width: 100px;text-align: center;'>ID Задачи</th>
+    <th style='width: 100px;text-align: center;'>Название задачи</th>
+    <th style='width: 500px;text-align: center;'>Текст задачи</th>
+    <th style='width: 100px;text-align: center;'>Входные данные</th>
+    <th style='width: 100px;text-align: center;'>Выходные данные</th>
+    </tr><hr>";
+    $url_this_page = explode('/', str_replace('.php', '', $_SERVER['REQUEST_URI']));
+    $number_this_page = $url_this_page[count($url_this_page)-1];
+     $sql = mysqli_query($conn, "SELECT * FROM `task` WHERE (id_task = '$number_this_page')");
+    while($row = mysqli_fetch_array($sql)){
+    $id_task=$row['id_task'];
+    $text=$row['text'];
+    $name=$row['name_task'];
+    $input_text=$row['input_text'];
+    $output_text=$row['output_text'];
+ 
+    echo "<tr><td style='text-align: center;'>$id_task</td><td style='text-align: center;'>$name</td><td style='text-align: center;'>$text</td><td style='text-align: center;'>$input_text</td><td style='text-align: center;'>$output_text</td></tr>";
+    }
+    echo "</table><hr>";
+    ?>
+        <div style="padding-top:50px;padding-bottom:50px;">
+    <h2>Отправить решение</h2>
+  <form method="POST" action="../../upload.php" enctype="multipart/form-data">
+    <div>
+      <span>Загрузить файл:</span>
+      <input type="file" name="uploadedFile" />
+        <br>
+        <input type="hidden" name="id_task" value="<? echo $id_task ?>" readonly/>
+        <input type="hidden" name="id_user" value="<? echo $id_user ?>" readonly/>
+    </div>
+ 
+    <input type="submit" name="uploadBtn" value="Отправить" />
+  </form>
+    </div>
+    <h2>Результаты</h2>
+    <?php
+    
+    echo "<table border='0'>
+    <tr>
+    <th style='width: 200px;text-align: center;'>Номер попытки</th>
+    <th style='width: 700px;text-align: center;'>Количество баллов</th>
+    </tr><hr>";
+    $url_this_page = explode('/', str_replace('.php', '', $_SERVER['REQUEST_URI']));
+    $number_this_page = $url_this_page[count($url_this_page)-1];
+     $sql = mysqli_query($conn, "SELECT * FROM `score` WHERE (id_user = '$id_user' AND id_task = '$number_this_page')");
+    while($row = mysqli_fetch_array($sql)){
+    $count_sending=$row['count_sending'];
+    $score=$row['score'];
+ 
+    echo "<tr><td style='text-align: center;'>$count_sending</td><td style='text-align: center;'>$score</td></tr>";
+    }
+    echo "</table><hr>";
+    ?>
+    </div>
+</body>
+</html>
